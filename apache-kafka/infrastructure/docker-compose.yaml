@@ -1,0 +1,195 @@
+services:
+  broker:
+    image: confluentinc/cp-kafka:7.6.2
+    hostname: broker
+    container_name: broker
+    ports:
+      - ${KAFKA_BROKER_PORT}:${KAFKA_BROKER_PORT}
+      - ${KAFKA_BROKER_DOCKER_PORT}:${KAFKA_BROKER_DOCKER_PORT}
+    networks:
+      - kafka-network
+      - shared-network
+    volumes:
+      - broker-data-volume:/var/lib/kafka/data
+      - broker-config-volume:${KAFKA_CONFIG_PATH}
+      - broker-secrets-volume:${KAFKA_SECRETS_PATH}
+      - ${KAFKA_SSL_SCRIPT}:/docker-entrypoint-init.d/ssl.sh
+    command: sh -e -c "/docker-entrypoint-init.d/ssl.sh && /etc/confluent/docker/run"
+    environment:
+      # Not sensitive, Pre-Generated Pseudo-Random
+      # https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      CLUSTER_ID: NiU1OEHBNScwNTJQNYM3Qk
+      KAFKA_NODE_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: ${KAFKA_CONTROLLER_INTERNAL_LISTENER_ID}
+      KAFKA_INTER_BROKER_LISTENER_NAME: ${KAFKA_BROKER_INTERNAL_LISTENER_ID}
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:${KAFKA_CONTROLLER_INTERNAL_PORT}
+      KAFKA_ADVERTISED_LISTENERS: |
+        ${KAFKA_BROKER_DOCKER_LISTENER_ID}://broker:${KAFKA_BROKER_DOCKER_PORT}, \
+        ${KAFKA_BROKER_EXTERNAL_LISTENER_ID}://localhost:${KAFKA_BROKER_PORT}, \
+        ${KAFKA_BROKER_INTERNAL_LISTENER_ID}://broker:${KAFKA_BROKER_INTERNAL_PORT}
+      KAFKA_LISTENERS: |
+        ${KAFKA_BROKER_DOCKER_LISTENER_ID}://${KAFKA_ALL_NETWORK_INTERFACES}:${KAFKA_BROKER_DOCKER_PORT}, \
+        ${KAFKA_BROKER_EXTERNAL_LISTENER_ID}://${KAFKA_ALL_NETWORK_INTERFACES}:${KAFKA_BROKER_PORT}, \
+        ${KAFKA_BROKER_INTERNAL_LISTENER_ID}://${KAFKA_ALL_NETWORK_INTERFACES}:${KAFKA_BROKER_INTERNAL_PORT}, \
+        ${KAFKA_CONTROLLER_INTERNAL_LISTENER_ID}://${KAFKA_ALL_NETWORK_INTERFACES}:${KAFKA_CONTROLLER_INTERNAL_PORT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: |
+        ${KAFKA_BROKER_DOCKER_LISTENER_ID}:${KAFKA_EXTERNAL_SECURITY_PROTOCOL}, \
+        ${KAFKA_BROKER_EXTERNAL_LISTENER_ID}:${KAFKA_EXTERNAL_SECURITY_PROTOCOL}, \
+        ${KAFKA_BROKER_INTERNAL_LISTENER_ID}:${KAFKA_INTERNAL_SECURITY_PROTOCOL}, \
+        ${KAFKA_CONTROLLER_INTERNAL_LISTENER_ID}:PLAINTEXT
+      KAFKA_SASL_ENABLED_MECHANISMS: ${KAFKA_SASL_MECHANISM}
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: ${KAFKA_SASL_MECHANISM}
+      KAFKA_ADMIN_USERNAME: ${KAFKA_ADMIN_USERNAME}
+      KAFKA_ADMIN_PASSWORD: ${KAFKA_ADMIN_PASSWORD}
+      KAFKA_USERNAME: ${KAFKA_USERNAME}
+      KAFKA_PASSWORD: ${KAFKA_PASSWORD}
+      KAFKA_SECRETS_LOCATION: ${KAFKA_SECRETS_PATH}
+      KAFKA_SSL_KEY_ALIAS: ${KAFKA_SSL_KEY_ALIAS}
+      KAFKA_SSL_KEY_PASSWORD: ${KAFKA_SSL_PASSWORD}
+      KAFKA_SSL_KEY_CREDENTIALS: ${KAFKA_SSL_KEY_CREDENTIALS_FILE_NAME}
+      KAFKA_SSL_KEYSTORE_FILENAME: ${KAFKA_SSL_KEYSTORE_NAME}
+      KAFKA_SSL_KEYSTORE_LOCATION: ${KAFKA_SECRETS_PATH}/${KAFKA_SSL_KEYSTORE_NAME}
+      KAFKA_SSL_KEYSTORE_PASSWORD: ${KAFKA_SSL_PASSWORD}
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: ${KAFKA_SSL_KEYSTORE_CREDENTIALS_FILE_NAME}
+      KAFKA_SSL_TRUSTSTORE_FILENAME: ${KAFKA_SSL_TRUSTSTORE_NAME}
+      KAFKA_SSL_TRUSTSTORE_LOCATION: ${KAFKA_SECRETS_PATH}/${KAFKA_SSL_TRUSTSTORE_NAME}
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: ${KAFKA_SSL_PASSWORD}
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: ${KAFKA_SSL_TRUSTSTORE_CREDENTIALS_FILE_NAME}
+      KAFKA_SSL_CERT_FILE_PATH: ${KAFKA_SECRETS_PATH}/${KAFKA_SSL_CERT_FILE_NAME}
+      # Note:
+      # Interpolation of keys in a YAML map is not supported.
+      # KAFKA_LISTENER_NAME_<ID>_<MECHANISM>_SASL_JAAS_CONFIG
+      # <ID> should be the same as the value of ${KAFKA_BROKER_DOCKER_LISTENER_ID}
+      # <MECHANISM> should be the same as the value of ${KAFKA_SASL_MECHANISM}
+      # https://docs.confluent.io/platform/current/security/authentication/sasl/plain/overview.html#configuration
+      KAFKA_LISTENER_NAME_DOCKER_PLAIN_SASL_JAAS_CONFIG: |
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+          username=${KAFKA_USERNAME} \
+          password=${KAFKA_PASSWORD} \
+          user_${KAFKA_USERNAME}=${KAFKA_PASSWORD};
+      # Note:
+      # Interpolation of keys in a YAML map is not supported.
+      # KAFKA_LISTENER_NAME_<ID>_<MECHANISM>_SASL_JAAS_CONFIG
+      # <ID> should be the same as the value of ${KAFKA_BROKER_EXTERNAL_LISTENER_ID}
+      # <MECHANISM> should be the same as the value of ${KAFKA_SASL_MECHANISM}
+      # https://docs.confluent.io/platform/current/security/authentication/sasl/plain/overview.html#configuration
+      KAFKA_LISTENER_NAME_EXTERNAL_PLAIN_SASL_JAAS_CONFIG: |
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+          username=${KAFKA_USERNAME} \
+          password=${KAFKA_PASSWORD} \
+          user_${KAFKA_USERNAME}=${KAFKA_PASSWORD};
+      # Note:
+      # Interpolation of keys in a YAML map is not supported.
+      # KAFKA_LISTENER_NAME_<ID>_<MECHANISM>_SASL_JAAS_CONFIG
+      # <ID> should be the same as the value of ${KAFKA_BROKER_INTERNAL_LISTENER_ID}
+      # <MECHANISM> should be the same as the value of ${KAFKA_SASL_MECHANISM}
+      # https://docs.confluent.io/platform/current/security/authentication/sasl/plain/overview.html#configuration
+      KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_JAAS_CONFIG: |
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+          username=${KAFKA_ADMIN_USERNAME} \
+          password=${KAFKA_ADMIN_PASSWORD} \
+          user_${KAFKA_ADMIN_USERNAME}=${KAFKA_ADMIN_PASSWORD};
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.2
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      - broker
+    ports:
+      - ${KAFKA_SCHEMA_REGISTRY_PORT}:${KAFKA_SCHEMA_REGISTRY_PORT}
+    networks:
+      - kafka-network
+      - shared-network
+    volumes:
+      - schema-registry-config-volume:/etc/schema-registry
+      - schema-registry-secrets-volume:/etc/schema-registry/secrets
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://${KAFKA_ALL_NETWORK_INTERFACES}:${KAFKA_SCHEMA_REGISTRY_PORT}
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:${KAFKA_BROKER_INTERNAL_PORT}
+      SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM}
+      SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: ${KAFKA_INTERNAL_SECURITY_PROTOCOL}
+      SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: |
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+          username=${KAFKA_ADMIN_USERNAME} \
+          password=${KAFKA_ADMIN_PASSWORD};
+
+  schema-registry-ui:
+    image: landoop/schema-registry-ui:0.9.5
+    hostname: schema-registry-ui
+    container_name: schema-registry-ui
+    depends_on:
+      - schema-registry
+    ports:
+      - ${KAFKA_SCHEMA_REGISTRY_UI_PORT}:${KAFKA_SCHEMA_REGISTRY_UI_PORT}
+    networks:
+      - kafka-network
+    environment:
+      PORT: ${KAFKA_SCHEMA_REGISTRY_UI_PORT}
+      SCHEMAREGISTRY_URL: http://schema-registry:${KAFKA_SCHEMA_REGISTRY_PORT}
+      ALLOW_DELETION: true
+      PROXY: true
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:7.6.2
+    hostname: control-center
+    container_name: control-center
+    depends_on:
+      - broker
+      - schema-registry
+    ports:
+      - ${KAFKA_CONTROL_CENTER_PORT}:${KAFKA_CONTROL_CENTER_PORT}
+    networks:
+      - kafka-network
+    volumes:
+      - control-center-data-volume:/var/lib/confluent-control-center
+      - control-center-config-volume:/etc/confluent-control-center
+    environment:
+      PORT: ${KAFKA_CONTROL_CENTER_PORT}
+      CONTROL_CENTER_REST_PORT: ${KAFKA_CONTROL_CENTER_PORT}
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: broker:${KAFKA_BROKER_INTERNAL_PORT}
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: http://schema-registry:${KAFKA_SCHEMA_REGISTRY_PORT}
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_STREAMS_SASL_MECHANISM: ${KAFKA_SASL_MECHANISM}
+      CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: ${KAFKA_INTERNAL_SECURITY_PROTOCOL}
+      CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: |
+        org.apache.kafka.common.security.plain.PlainLoginModule required \
+          username=${KAFKA_ADMIN_USERNAME} \
+          password=${KAFKA_ADMIN_PASSWORD};
+
+volumes:
+  broker-data-volume:
+    name: broker-data-volume
+    driver: local
+  broker-config-volume:
+    name: broker-config-volume
+    driver: local
+  broker-secrets-volume:
+    name: broker-secrets-volume
+    driver: local
+
+  schema-registry-config-volume:
+    name: schema-registry-config-volume
+    driver: local
+  schema-registry-secrets-volume:
+    name: schema-registry-secrets-volume
+    driver: local
+
+  control-center-data-volume:
+    name: control-center-data-volume
+    driver: local
+  control-center-config-volume:
+    name: control-center-config-volume
+    driver: local
+
+networks:
+  kafka-network:
+    name: kafka-network
+    driver: bridge
+  shared-network:
+    name: shared-network
+    driver: bridge
