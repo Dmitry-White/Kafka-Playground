@@ -1,0 +1,41 @@
+services:
+  producer:
+    hostname: producer
+    container_name: producer
+    build:
+      args:
+        - APP=kafka-producer
+    ports:
+      - ${KAFKA_PRODUCER_PORT}:${KAFKA_APP_INTERNAL_PORT}
+    networks:
+      - shared-network
+    environment:
+      PORT: ${KAFKA_APP_INTERNAL_PORT}
+      KAFKA_BROKER_URI: broker:${KAFKA_BROKER_DOCKER_PORT}
+      KAFKA_SCHEMA_REGISTRY_URI: http://schema-registry:${KAFKA_SCHEMA_REGISTRY_PORT}
+      KAFKA_USERNAME: ${KAFKA_USERNAME}
+      KAFKA_PASSWORD: ${KAFKA_PASSWORD}
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
+
+  consumer:
+    hostname: consumer
+    container_name: consumer
+    build:
+      args:
+        - APP=kafka-consumer
+    ports:
+      - ${KAFKA_CONSUMER_PORT}:${KAFKA_APP_INTERNAL_PORT}
+    networks:
+      - shared-network
+    environment:
+      PORT: ${KAFKA_APP_INTERNAL_PORT}
+      KAFKA_BROKER_URI: broker:${KAFKA_BROKER_DOCKER_PORT}
+      KAFKA_SCHEMA_REGISTRY_URI: http://schema-registry:${KAFKA_SCHEMA_REGISTRY_PORT}
+      KAFKA_USERNAME: ${KAFKA_USERNAME}
+      KAFKA_PASSWORD: ${KAFKA_PASSWORD}
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      KAFKA_GROUP: test-group
+
+networks:
+  shared-network:
+    external: true
