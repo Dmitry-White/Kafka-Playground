@@ -71,7 +71,7 @@ The following fields in `protocol` object are exposed:
 Import schema TS types corresponding to schemas in Core module in the following way:
 
 ```javascript
-import { EventMessage } from '@dmitrywhite/kafka/basic-producer';
+import { EventMessage } from '@dmitrywhite/kafka/producer';
 import { PROTOCOLS, PROTOCOL_NAMES, SCHEMA_NAMES } from '@dmitrywhite/kafka/core';
 import { ExampleEvent } from '@dmitrywhite/kafka/core/types';
 
@@ -88,7 +88,7 @@ const event: EventMessage = {
 
 const schema = PROTOCOLS[PROTOCOL_NAMES.EXAMPLE].schemas[SCHEMA_NAMES.ExampleEvent];
 if (!schema.metadata.isValid(event.value)) {
-  throw new UnprocessableEntityException('Never as event value is valid');
+  throw new UnprocessableEntityException('Event value is invalid');
 }
 ```
 

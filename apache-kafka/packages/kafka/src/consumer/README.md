@@ -1,17 +1,17 @@
-# @dmitrywhite/kafka/basic-consumer
+# @dmitrywhite/kafka/consumer
 
 This is a NestJS module that integrates with [KafkaJS](https://kafka.js.org/) and [KafkaJS Schema Registry](https://kafkajs.github.io/confluent-schema-registry/).
-It provides a basic Kafka consumer that listens to the messages on the specified topic and runs a provided handler for each received message via an already initialised Kafka Client in the consuming app.
+It provides a Kafka consumer that listens to the messages on the specified topic and runs a provided handler for each received message via an already initialised Kafka Client in the consuming app.
 
 ## Usage
 
 The consuming app is **required** to have a `KafkaClientModule` **already initialised**.
-Import this consumer module either directly to `AppModule` root module or an intermediary `LocalKafkaBasicConsumerModule` lib module in the following way:
+Import this consumer module either directly to `AppModule` root module or an intermediary `LocalKafkaConsumerModule` lib module in the following way:
 
 ```javascript
 imports: [
 	...
-	KafkaBasicConsumerModule.forRootAsync(MODULE_CONFIGURATION),
+	KafkaConsumerModule.forRootAsync(MODULE_CONFIGURATION),
 	...
 ];
 ```
@@ -27,7 +27,7 @@ To configure this Kafka Basic Consumer module, the following fields in `MODULE_C
 - `inject` - list of services the consuming app wants to provide to the module;
 - `useFactory` - concrete implementation of how services from `inject` field are used to construct dynamic options;
 
-`useFactory` function returns an `options` [object for internal dynamic provider](https://docs.nestjs.com/fundamentals/dynamic-modules#custom-options-factory-class), corresponds to `KafkaBasicConsumerOptions` type in `basic-consumer.types.ts`:
+`useFactory` function returns an `options` [object for internal dynamic provider](https://docs.nestjs.com/fundamentals/dynamic-modules#custom-options-factory-class), corresponds to `KafkaConsumerOptions` type in `consumer.types.ts`:
 
 - `topic` corresponds to Kafka topic the consuming application wants to listen to;
 - `groupId` corresponds to a Kafka Consumer Group the consuming application wants to be part of, which affects how/when messages are processed in the case of several consumers subscribed to the same topic;

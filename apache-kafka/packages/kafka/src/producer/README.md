@@ -1,7 +1,7 @@
-# @dmitrywhite/kafka/basic-producer
+# @dmitrywhite/kafka/producer
 
 This is a NestJS module that integrates with [KafkaJS](https://kafka.js.org/) and [KafkaJS Schema Registry](https://kafkajs.github.io/confluent-schema-registry/).
-It provides a basic Kafka producer that provides a service with ability to send messages to the any topic passed to its method(s) via an already initialised Kafak Client in the consuming app.
+It provides a Kafka producer that provides a service with ability to send messages to the any topic passed to its method(s) via an already initialised Kafak Client in the consuming app.
 
 ## Usage
 
@@ -9,25 +9,25 @@ The consuming app is **required** to have a `KafkaClientModule` **already initia
 Import this producer module either directly to `AppModule` root module or any target module in the following way:
 
 ```javascript
-import { KafkaBasicProducerModule } from '@dmitrywhite/kafka/basic-producer';
+import { KafkaProducerModule } from '@dmitrywhite/kafka/producer';
 ...
 imports: [
 	...
-	KafkaBasicProducerModule,
+	KafkaProducerModule,
 	...
 ];
 ```
 
 This would enable your consuming app to have Kafka Basic Producer service available for usage in the target module.
 
-Then in this target module code the `KafkaBasicProducerService` can be used in the following way:
+Then in this target module code the `KafkaProducerService` can be used in the following way:
 
 ```javascript
-import { KafkaBasicProducerService } from '@dmitrywhite/kafka/basic-producer';
+import { KafkaProducerService } from '@dmitrywhite/kafka/producer';
 ...
 constructor(
     ...
-    private kafkaBasicProducer: KafkaBasicProducerService,
+    private kafkaBasicProducer: KafkaProducerService,
     ...
 ) {...}
 ...
